@@ -1,5 +1,9 @@
-from  Grafo import Grafo
+from Grafo import Grafo
 
 grafo = Grafo()
-grafo.add_info("../pista")
-print(grafo.procura_BFS())
+grafo.add_info("../nossapista")
+print(grafo.toMatriz())
+path1 = grafo.procura_BFS()
+path2 = grafo.procura_DFS()
+print(grafo.toMatrizPath(path1))
+print(grafo.toMatrizPath(path2))

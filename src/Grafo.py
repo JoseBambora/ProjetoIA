@@ -65,6 +65,40 @@ class Grafo:
             if x-1 >= 0 and y+1 < self.heigth:
                 self.m_graph[key].append((x-1, y+1))
 
+    def matrizToString(self, matriz):
+        out = ""
+        for x in matriz.keys():
+            for c in matriz[x]:
+                out = out + c
+            out = out + "\n"
+        return out
+
+    # Devolve o grafo sub a forma de string que representa uma matriz
+    def toMatriz(self):
+        matriz = {}
+        for (x, y) in self.m_graph.keys():
+            if not matriz.__contains__(y):
+                matriz[y] = []
+            matriz[y].append(self.m_nodes[(x, y)].elem[0])
+        return self.matrizToString(matriz)
+
+    # Printa o caminho realizado no grafo
+    def toMatrizPath(self, path):
+        matriz = {}
+        for (x, y) in self.m_graph.keys():
+            if not matriz.__contains__(y):
+                matriz[y] = []
+            if (x, y) not in path[0]:
+                matriz[y].append(self.m_nodes[(x, y)].elem[0])
+            else:
+                matriz[y].append(' ')
+        return self.matrizToString(matriz)
+
+    # Adiciona a aresta, no modo não direcionado
+    def add_aresta(self, coords1, coords2):
+        self.m_graph[coords1].append(coords2)
+        self.m_graph[coords2].append(coords1)
+
     # Calcula o custo do caminho encontrado
     def calcula_custo(self, path):
         teste = path
@@ -108,3 +142,25 @@ class Grafo:
             path.reverse()
             custo = self.calcula_custo(path)
         return (path, custo)
+
+        # Procura em profundidade
+    def procura_DFS_Recursiva(self, start, end, path, visited):
+        path.append(start)
+        visited.add(start)
+        if start in end:
+            # calcular o custo do caminho funçao calcula custo.
+            custoT = self.calcula_custo(path)
+            return path, custoT
+        for adjacente in self.m_graph[start]:
+            if adjacente not in visited:
+                resultado = self.procura_DFS_Recursiva(adjacente, end, path, visited)
+                if resultado is not None:
+                    return resultado
+        path.pop()  # se nao encontra remover o que está no caminho......
+        return None
+
+    def procura_DFS(self):
+        start = self.inicialPos
+        end = self.finalPos
+        visited = set()
+        return self.procura_DFS_Recursiva(start, end, [], visited)
