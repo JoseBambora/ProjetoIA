@@ -1,6 +1,7 @@
 from Nodo import Nodo
 from queue import Queue
 
+
 class Grafo:
     def __init__(self):
         self.m_nodes = {}
@@ -8,7 +9,7 @@ class Grafo:
         self.m_h = {}
         self.heigth = 0
         self.width = 0
-        self.inicialPos = (0,0)
+        self.inicialPos = (0, 0)
         self.finalPos = []
 
     def __str__(self):
@@ -20,7 +21,7 @@ class Grafo:
         return out
 
     # Adiciona a aresta, no modo não direcionado
-    def add_aresta(self,coords1,coords2):
+    def add_aresta(self, coords1, coords2):
         self.m_graph[coords1].append(coords2)
         self.m_graph[coords2].append(coords1)
 
@@ -36,15 +37,15 @@ class Grafo:
         file = open(namefile, "r")
         y = 0
         line = file.readline()
-        self.width = len(line)-1
+        self.width = len(line) - 1
         while line:
-            for x in range(0,self.width):
+            for x in range(0, self.width):
                 ch = line.__getitem__(x)
                 nodo = Nodo((x, y), (ch, self.aux_custo(ch)))
                 if ch == 'P':
-                    self.inicialPos = (x ,y)
+                    self.inicialPos = (x, y)
                 if ch == 'F':
-                    self.finalPos.append((x,y))
+                    self.finalPos.append((x, y))
                 self.m_nodes[(x, y)] = nodo
                 self.m_graph[(x, y)] = []
             y += 1
@@ -54,20 +55,20 @@ class Grafo:
         for key in self.m_graph.keys():
             x = key[0]
             y = key[1]
-            if y+1 < self.heigth:
-                self.add_aresta((x, y), (x, y+1))
-            if x+1 < self.width:
-                self.add_aresta((x, y), (x+1, y))
-            if y+1 < self.heigth and x+1 < self.width:
-                self.add_aresta((x, y), (x+1, y+1))
-            if x+1 < self.width and y-1 >= 0:
-                self.m_graph[key].append((x+1, y-1))
-            if x-1 >= 0 and y+1 < self.heigth:
-                self.m_graph[key].append((x-1, y+1))
+            if y + 1 < self.heigth:
+                self.add_aresta((x, y), (x, y + 1))
+            if x + 1 < self.width:
+                self.add_aresta((x, y), (x + 1, y))
+            if y + 1 < self.heigth and x + 1 < self.width:
+                self.add_aresta((x, y), (x + 1, y + 1))
+            if x + 1 < self.width and y - 1 >= 0:
+                self.m_graph[key].append((x + 1, y - 1))
+            if x - 1 >= 0 and y + 1 < self.heigth:
+                self.m_graph[key].append((x - 1, y + 1))
 
     def matrizToString(self, matriz):
         out = ""
-        for i in range(self.width+2):
+        for i in range(self.width + 2):
             out += '_'
         out += '\n'
         for x in matriz.keys():
@@ -75,7 +76,7 @@ class Grafo:
             for c in matriz[x]:
                 out = out + c
             out = out + "|\n"
-        for i in range(self.width+2):
+        for i in range(self.width + 2):
             out += '_'
         return out
 
@@ -93,24 +94,27 @@ class Grafo:
         i = 0
         for c in path:
             out += str(c) + ' '
-            i+=1
-            if i%8 == 0:
+            i += 1
+            if i % 8 == 0:
                 out += '\n  '
                 for j in range(num):
                     out += ' '
         return out + ']'
+
     # Printa o caminho realizado no grafo
-    def toMatrizPath(self, path, c):
+    def toMatrizPath(self, path, custo, c):
         matriz = {}
         for (x, y) in self.m_graph.keys():
             if not matriz.__contains__(y):
                 matriz[y] = []
-            if (x, y) not in path[0]:
+            if (x, y) not in path:
                 matriz[y].append(self.m_nodes[(x, y)].elem[0])
             else:
                 matriz[y].append(c)
-        return self.matrizToString(matriz) + "\nCusto: " + str(path[1]) + "\nCaminho: " + self.printPath(path[0],len('Caminho: '))
-
+        res = self.matrizToString(matriz)
+        if(custo != 0):
+            res += "\nCusto: " + str(custo) + "\nCaminho: " + self.printPath(path, len('Caminho: '))
+        return res
     # Adiciona a aresta, no modo não direcionado
     def add_aresta(self, coords1, coords2):
         self.m_graph[coords1].append(coords2)
@@ -137,7 +141,7 @@ class Grafo:
         parent = dict()
         parent[start] = None
         path_found = False
-        finalpos = (0,0)
+        finalpos = (0, 0)
         while not fila.empty() and path_found == False:
             nodo_atual = fila.get()
             if nodo_atual in end:
@@ -157,9 +161,10 @@ class Grafo:
                 path.append(parent[end])
                 end = parent[end]
             path.reverse()
-        return path, self.calcula_custo(path)
+        return path, self.calcula_custo(path), visited
 
         # Procura em profundidade
+
     def procura_DFS_Recursiva(self, start, end, path, visited):
         path.append(start)
         visited.add(start)
@@ -179,4 +184,5 @@ class Grafo:
         start = self.inicialPos
         end = self.finalPos
         visited = set()
-        return self.procura_DFS_Recursiva(start, end, [], visited)
+        x, y = self.procura_DFS_Recursiva(start, end, [], visited)
+        return x, y, visited
