@@ -67,10 +67,16 @@ class Grafo:
 
     def matrizToString(self, matriz):
         out = ""
+        for i in range(self.width+2):
+            out += '_'
+        out += '\n'
         for x in matriz.keys():
+            out += '|'
             for c in matriz[x]:
                 out = out + c
-            out = out + "\n"
+            out = out + "|\n"
+        for i in range(self.width+2):
+            out += '_'
         return out
 
     # Devolve o grafo sub a forma de string que representa uma matriz
@@ -82,8 +88,19 @@ class Grafo:
             matriz[y].append(self.m_nodes[(x, y)].elem[0])
         return self.matrizToString(matriz)
 
+    def printPath(self, path, num):
+        out = "[ "
+        i = 0
+        for c in path:
+            out += str(c) + ' '
+            i+=1
+            if i%8 == 0:
+                out += '\n  '
+                for j in range(num):
+                    out += ' '
+        return out + ']'
     # Printa o caminho realizado no grafo
-    def toMatrizPath(self, path):
+    def toMatrizPath(self, path, c):
         matriz = {}
         for (x, y) in self.m_graph.keys():
             if not matriz.__contains__(y):
@@ -91,8 +108,8 @@ class Grafo:
             if (x, y) not in path[0]:
                 matriz[y].append(self.m_nodes[(x, y)].elem[0])
             else:
-                matriz[y].append(' ')
-        return self.matrizToString(matriz)
+                matriz[y].append(c)
+        return self.matrizToString(matriz) + "\nCusto: " + str(path[1]) + "\nCaminho: " + self.printPath(path[0],len('Caminho: '))
 
     # Adiciona a aresta, no modo não direcionado
     def add_aresta(self, coords1, coords2):
@@ -140,8 +157,7 @@ class Grafo:
                 path.append(parent[end])
                 end = parent[end]
             path.reverse()
-            custo = self.calcula_custo(path)
-        return (path, custo)
+        return path, self.calcula_custo(path)
 
         # Procura em profundidade
     def procura_DFS_Recursiva(self, start, end, path, visited):
