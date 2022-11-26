@@ -1,5 +1,7 @@
 from Nodo import Nodo
 from queue import Queue
+from math import inf
+from math import sqrt
 
 
 class Grafo:
@@ -65,6 +67,7 @@ class Grafo:
                 self.m_graph[key].append((x + 1, y - 1))
             if x - 1 >= 0 and y + 1 < self.heigth:
                 self.m_graph[key].append((x - 1, y + 1))
+        self.define_dis()
 
     def matrizToString(self, matriz):
         out = ""
@@ -186,3 +189,78 @@ class Grafo:
         visited = set()
         x, y = self.procura_DFS_Recursiva(start, end, [], visited)
         return x, y, visited
+
+    def define_dis(self):
+        for nodo in self.m_nodes.values():
+            dist = inf
+            for (x, y) in self.finalPos:
+                d = sqrt((x - nodo.coords[0]) ** 2 + (y - nodo.coords[1]) ** 2)
+                if dist > d:
+                    dist = d
+            nodo.heuristica = dist
+
+    def get_ponto(self, pos, velocidade, orientacao):
+        p = pos
+        for i in range(0, velocidade):
+            l = self.m_graph[p]
+            for (x, y) in l:
+                if (orientacao == 0) and p[0] - 1 == x and p[1] == y:
+                    p = (x, y)
+                    if x == 0:
+                        return p
+                    break
+                elif orientacao == 1 and p[0] + 1 == x and p[1] == y:
+                    p = (x, y)
+                    if x == self.width - 1:
+                        return p
+                    break
+                elif orientacao == 2 and p[1] - 1 == y and p[0] == x:
+                    p = (x, y)
+                    if y == 0:
+                        return p
+                    break
+                elif orientacao == 3 and p[1] + 1 == y and p[0] == x:
+                    p = (x, y)
+                    if x == self.heigth - 1:
+                        return p
+                    break
+        return p
+
+    # Devolve a set de posições para uma velocidade
+    def heuristica_pos(self, pos, velocity):
+        la = self.m_graph[pos]
+        l = set()
+        if velocity > 1:
+            for c in la:
+                if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
+                    aux = self.heuristica_pos(c, velocity - 1)
+                    l.update(aux)
+        else:
+            l.update(la)
+        return l
+
+    def get_best(self, set):
+        bestPos = (0, 0)
+        heu = inf
+        for (x, y) in set:
+            if heu > self.m_nodes[(x, y)].heuristica:
+                bestPos = (x, y)
+                heu = self.m_nodes[(x, y)].heuristica
+        return bestPos, heu
+
+    def heuristica(self, pos, velocidade):
+        if velocidade > 1:
+            s1 = self.heuristica_pos(pos, velocidade - 1)
+        else:
+            s1 = set()
+        s2 = self.heuristica_pos(pos, velocidade)
+        s3 = self.heuristica_pos(pos, velocidade + 1)
+        b1, h1 = self.get_best(s1)
+        b2, h2 = self.get_best(s2)
+        b3, h3 = self.get_best(s3)
+        h = min(h1, h2, h3)
+        if h1 == h:
+            return b1, -1, velocidade - 1
+        elif h2 == h:
+            return b2, 0, velocidade
+        return b3, 1, velocidade + 1
