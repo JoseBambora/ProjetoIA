@@ -166,8 +166,6 @@ class Grafo:
             path.reverse()
         return path, self.calcula_custo(path), visited
 
-        # Procura em profundidade
-
     def procura_DFS_Recursiva(self, start, end, path, visited):
         path.append(start)
         visited.add(start)
@@ -183,6 +181,7 @@ class Grafo:
         path.pop()  # se nao encontra remover o que está no caminho......
         return None
 
+    # Procura em profundidade
     def procura_DFS(self):
         start = self.inicialPos
         end = self.finalPos
@@ -199,68 +198,101 @@ class Grafo:
                     dist = d
             nodo.heuristica = dist
 
-    def get_ponto(self, pos, velocidade, orientacao):
-        p = pos
-        for i in range(0, velocidade):
-            l = self.m_graph[p]
-            for (x, y) in l:
-                if (orientacao == 0) and p[0] - 1 == x and p[1] == y:
-                    p = (x, y)
-                    if x == 0:
-                        return p
-                    break
-                elif orientacao == 1 and p[0] + 1 == x and p[1] == y:
-                    p = (x, y)
-                    if x == self.width - 1:
-                        return p
-                    break
-                elif orientacao == 2 and p[1] - 1 == y and p[0] == x:
-                    p = (x, y)
-                    if y == 0:
-                        return p
-                    break
-                elif orientacao == 3 and p[1] + 1 == y and p[0] == x:
-                    p = (x, y)
-                    if x == self.heigth - 1:
-                        return p
-                    break
-        return p
+    # .
+    #    .
+    #    .
+    # .
+    #
+    def calculaDist(self, c1 , c2):
+        x1 = c1[0]
+        y1 = c1[1]
+        x2 = c2[0]
+        y2 = c2[1]
+        dist = 0
+        while x1 != x2 and y1 != y2:
+            dist = dist + 1
+            if x1 > x2:
+                x1 = x1 - 1
+                if y1 > y2:
+                    y1 = y1 - 1
+                else:
+                    y1 = y1 + 1
+            else:
+                x2 = x2 - 1
+                if y1 > y2:
+                    y2 = y2 + 1
+                else:
+                    y2 = y2 - 1
+        if x1 == x2:
+            return dist + abs(y1-y2)
+        else:
+            return dist + abs(x1-x2)
+
 
     # Devolve a set de posições para uma velocidade
     def heuristica_pos(self, pos, velocity):
         la = self.m_graph[pos]
-        l = set()
+        l = list()
         if velocity > 1:
             for c in la:
                 if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
                     aux = self.heuristica_pos(c, velocity - 1)
-                    l.update(aux)
+                    for path in aux:
+                        if self.calculaDist(path[-1],pos) == velocity:
+                            l.append([pos] + path)
         else:
-            l.update(la)
+            for c in la:
+                if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
+                    l.append([pos,c])
         return l
-
-    def get_best(self, set):
-        bestPos = (0, 0)
-        heu = inf
-        for (x, y) in set:
-            if heu > self.m_nodes[(x, y)].heuristica:
-                bestPos = (x, y)
-                heu = self.m_nodes[(x, y)].heuristica
-        return bestPos, heu
 
     def heuristica(self, pos, velocidade):
         if velocidade > 1:
             s1 = self.heuristica_pos(pos, velocidade - 1)
         else:
-            s1 = set()
+            s1 = list()
         s2 = self.heuristica_pos(pos, velocidade)
         s3 = self.heuristica_pos(pos, velocidade + 1)
-        b1, h1 = self.get_best(s1)
-        b2, h2 = self.get_best(s2)
-        b3, h3 = self.get_best(s3)
-        h = min(h1, h2, h3)
-        if h1 == h:
-            return b1, -1, velocidade - 1
-        elif h2 == h:
-            return b2, 0, velocidade
-        return b3, 1, velocidade + 1
+        return s1,s2,s3
+
+    def greedy(self):
+        start = self.inicialPos
+        open_list = [(start, 1)]
+        closed_list = []
+        parents = {}
+        parents[start] = start
+        while len(open_list) > 0:
+            n, v = min(open_list, key=lambda elem: self.m_nodes[elem[0]].heuristica)
+            if n in self.finalPos:
+                reconst_path = []
+                while parents[n] != n:
+                    reconst_path.append(n)
+                    n = parents[n]
+                reconst_path.append(start)
+                reconst_path.reverse()
+                return reconst_path, self.calcula_custo(reconst_path)
+            s1, s2, s3 = self.heuristica(n, v)
+            for laux in s1:
+                for i in range(1,len(laux)):
+                    parents[laux[i]] = laux[i-1]
+            for laux in s2:
+                for i in range(1,len(laux)):
+                    parents[laux[i]] = laux[i-1]
+            for laux in s3:
+                for i in range(1,len(laux)):
+                    parents[laux[i]] = laux[i-1]
+            for laux in s1:
+                m = laux[-1]
+                if m not in open_list and m not in closed_list:
+                    open_list.append((m, v - 1))
+            for laux in s2:
+                m = laux[-1]
+                if m not in open_list and m not in closed_list:
+                    open_list.append((m, v))
+            for laux in s3:
+                m = laux[-1]
+                if m not in open_list and m not in closed_list:
+                    open_list.append((m, v + 1))
+            open_list.remove((n, v))
+            closed_list.append(n)
+        return None
