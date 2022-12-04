@@ -251,10 +251,23 @@ class Grafo:
             s1 = self.heuristica_pos(pos, velocidade - 1)
         else:
             s1 = list()
+        if len(s1) > 0:
+            s1 = min(s1, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
         s2 = self.heuristica_pos(pos, velocidade)
+        if len(s2) > 0:
+            s2 = min(s2, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
         s3 = self.heuristica_pos(pos, velocidade + 1)
-        return s1,s2,s3
+        if len(s3) > 0:
+            s3 = min(s3, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
+        return s1, s2, s3
 
+    def add_parent(self,s,open_list,closed_list,parents,v):
+        for i in range(1, len(s)):
+            if not parents.keys().__contains__(s[i]):
+                parents[s[i]] = s[i - 1]
+            m = s[i]
+            if m not in open_list and m not in closed_list:
+                open_list.append((m, v))
     def greedy(self):
         start = self.inicialPos
         open_list = [(start, 1)]
@@ -272,27 +285,9 @@ class Grafo:
                 reconst_path.reverse()
                 return reconst_path, self.calcula_custo(reconst_path)
             s1, s2, s3 = self.heuristica(n, v)
-            for laux in s1:
-                for i in range(1,len(laux)):
-                    parents[laux[i]] = laux[i-1]
-            for laux in s2:
-                for i in range(1,len(laux)):
-                    parents[laux[i]] = laux[i-1]
-            for laux in s3:
-                for i in range(1,len(laux)):
-                    parents[laux[i]] = laux[i-1]
-            for laux in s1:
-                m = laux[-1]
-                if m not in open_list and m not in closed_list:
-                    open_list.append((m, v - 1))
-            for laux in s2:
-                m = laux[-1]
-                if m not in open_list and m not in closed_list:
-                    open_list.append((m, v))
-            for laux in s3:
-                m = laux[-1]
-                if m not in open_list and m not in closed_list:
-                    open_list.append((m, v + 1))
+            self.add_parent(s1, open_list, closed_list, parents, v-1)
+            self.add_parent(s2, open_list, closed_list, parents, v)
+            self.add_parent(s3, open_list, closed_list, parents, v+1)
             open_list.remove((n, v))
             closed_list.append(n)
         return None
