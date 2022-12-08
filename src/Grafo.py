@@ -1,3 +1,5 @@
+import turtle
+
 from Nodo import Nodo
 from queue import Queue
 from math import inf
@@ -115,9 +117,10 @@ class Grafo:
             else:
                 matriz[y].append(c)
         res = self.matrizToString(matriz)
-        if(custo != 0):
+        if (custo != 0):
             res += "\nCusto: " + str(custo) + "\nCaminho: " + self.printPath(path, len('Caminho: '))
         return res
+
     # Adiciona a aresta, no modo não direcionado
     def add_aresta(self, coords1, coords2):
         self.m_graph[coords1].append(coords2)
@@ -189,6 +192,43 @@ class Grafo:
         x, y = self.procura_DFS_Recursiva(start, end, [], visited)
         return x, y, visited
 
+
+    # Custo Uniforme, ou algoritmo de dijkstra.
+    def custoUniforme(self):
+        start = self.inicialPos
+        end = self.finalPos
+        visited = set()
+        fila = list()
+        visited.add(start)
+        fila.append((start, 0))
+        parent = dict()
+        parent[start] = None
+        path_found = False
+        finalpos = (0, 0)
+        while len(fila) > 0 and path_found == False:
+            nodo_atual, custo = min(fila, key=lambda elem: elem[1])
+            fila.remove((nodo_atual, custo))
+            if nodo_atual in end:
+                finalpos = nodo_atual
+                path_found = True
+            else:
+                for adjacente in self.m_graph[nodo_atual]:
+                    if adjacente not in visited:
+                        fila.append((adjacente, custo + self.m_nodes[adjacente].elem[1]))
+                        parent[adjacente] = nodo_atual
+                        visited.add(adjacente)
+        path = []
+        if path_found:
+            path.append(finalpos)
+            end = finalpos
+            while parent[end] is not None:
+                path.append(parent[end])
+                end = parent[end]
+            path.reverse()
+        return path, self.calcula_custo(path), visited
+
+    # PESQUISA INFORMADA
+
     def define_dis(self):
         for nodo in self.m_nodes.values():
             dist = inf
@@ -198,12 +238,7 @@ class Grafo:
                     dist = d
             nodo.heuristica = dist
 
-    # .
-    #    .
-    #    .
-    # .
-    #
-    def calculaDist(self, c1 , c2):
+    def calculaDist(self, c1, c2):
         x1 = c1[0]
         y1 = c1[1]
         x2 = c2[0]
@@ -224,10 +259,9 @@ class Grafo:
                 else:
                     y2 = y2 - 1
         if x1 == x2:
-            return dist + abs(y1-y2)
+            return dist + abs(y1 - y2)
         else:
-            return dist + abs(x1-x2)
-
+            return dist + abs(x1 - x2)
 
     # Devolve a set de posições para uma velocidade
     def heuristica_pos(self, pos, velocity):
@@ -238,12 +272,12 @@ class Grafo:
                 if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
                     aux = self.heuristica_pos(c, velocity - 1)
                     for path in aux:
-                        if self.calculaDist(path[-1],pos) == velocity:
+                        if self.calculaDist(path[-1], pos) == velocity:
                             l.append([pos] + path)
         else:
             for c in la:
                 if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
-                    l.append([pos,c])
+                    l.append([pos, c])
         return l
 
     def heuristica(self, pos, velocidade):
@@ -251,43 +285,120 @@ class Grafo:
             s1 = self.heuristica_pos(pos, velocidade - 1)
         else:
             s1 = list()
-        if len(s1) > 0:
-            s1 = min(s1, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
         s2 = self.heuristica_pos(pos, velocidade)
-        if len(s2) > 0:
-            s2 = min(s2, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
         s3 = self.heuristica_pos(pos, velocidade + 1)
-        if len(s3) > 0:
-            s3 = min(s3, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
         return s1, s2, s3
 
-    def add_parent(self,s,open_list,closed_list,parents,v):
+    def add_parent(self, s, parents):
         for i in range(1, len(s)):
-            if not parents.keys().__contains__(s[i]):
+            if not parents.keys().__contains__(s[i]) or parents[s[i]]:
                 parents[s[i]] = s[i - 1]
-            m = s[i]
-            if m not in open_list and m not in closed_list:
+
+    def rebuild_path(self, start, caminho, n):
+        parents = {start: start}
+        reconst_path = []
+        procura = True
+        while procura:
+            if not parents.__contains__(n):
+                self.add_parent(caminho[n][0], parents)
+            if parents[n] == n:
+                procura = False
+            else:
+                reconst_path.append(n)
+                n = parents[n]
+        reconst_path.append(start)
+        reconst_path.reverse()
+        return reconst_path, self.calcula_custo(reconst_path)
+
+    def greedy_aux(self, s, caminho, open_list, visited, v):
+        if len(s) > 0:
+            s = min(s, key=lambda elem: self.m_nodes[elem[-1]].heuristica)
+            m = s[-1]
+            if m not in open_list and m not in visited:
+                caux = self.m_nodes[m].heuristica
+                if not caminho.__contains__(s[-1]) or caminho[s[-1]][1] > caux:
+                    caminho[s[-1]] = (s, caux)
                 open_list.append((m, v))
+
+    # Procura Gulosa
     def greedy(self):
         start = self.inicialPos
         open_list = [(start, 1)]
         closed_list = []
-        parents = {}
-        parents[start] = start
+        caminho = {}
         while len(open_list) > 0:
             n, v = min(open_list, key=lambda elem: self.m_nodes[elem[0]].heuristica)
             if n in self.finalPos:
-                reconst_path = []
-                while parents[n] != n:
-                    reconst_path.append(n)
-                    n = parents[n]
-                reconst_path.append(start)
-                reconst_path.reverse()
-                return reconst_path, self.calcula_custo(reconst_path)
+                return self.rebuild_path(start, caminho, n)
             s1, s2, s3 = self.heuristica(n, v)
-            self.add_parent(s1, open_list, closed_list, parents, v-1)
-            self.add_parent(s2, open_list, closed_list, parents, v)
-            self.add_parent(s3, open_list, closed_list, parents, v+1)
+            self.greedy_aux(s1, caminho, open_list, closed_list, v - 1)
+            self.greedy_aux(s2, caminho, open_list, closed_list, v)
+            self.greedy_aux(s3, caminho, open_list, closed_list, v + 1)
             open_list.remove((n, v))
             closed_list.append(n)
         return None
+
+    def a_star_aux(self, s, caminho, open_list, visited, custo, v):
+        if len(s) > 0:
+            s = min(s, key=lambda elem: self.m_nodes[elem[-1]].heuristica + self.calcula_custo(elem))
+            m = s[-1]
+            if m not in open_list and m not in visited:
+                c = self.calcula_custo(s)
+                caux = c + custo
+                if not caminho.__contains__(s[-1]) or caminho[s[-1]][1] > caux:
+                    caminho[s[-1]] = (s, caux)
+                open_list.append((m, v, caux))
+
+    # Procura A*
+    def a_star(self):
+        start = self.inicialPos
+        open_list = [(start, 1, 0)]
+        visited = []
+        caminho = {}
+        while len(open_list) > 0:
+            n, v, c = min(open_list, key=lambda elem: self.m_nodes[elem[0]].heuristica + elem[2])
+            if n in self.finalPos:
+                return self.rebuild_path(start, caminho, n)
+            s1, s2, s3 = self.heuristica(n, v)
+            self.a_star_aux(s1, caminho, open_list, visited, c, v - 1)
+            self.a_star_aux(s2, caminho, open_list, visited, c, v)
+            self.a_star_aux(s3, caminho, open_list, visited, c, v + 1)
+            open_list.remove((n, v, c))
+            visited.append(n)
+        return None
+
+    # Desenha o grafo de uma forma muito básica. Para já não está apto para desenhar caminhos
+    def draw_turtle(self):
+        race = turtle.Turtle()
+        n = 10
+        for y in range(self.heigth):
+            if y != 0:
+                race.left(90)
+                race.left(90)
+            for x in range(self.width):
+                if self.m_nodes[(x, y)].elem[0] == 'X':
+                    race.color("gray")
+                elif self.m_nodes[(x, y)].elem[0] == '-':
+                    race.color("white")
+                elif self.m_nodes[(x, y)].elem[0] == 'P':
+                    race.color("black")
+                elif self.m_nodes[(x, y)].elem[0] == 'F':
+                    race.color("red")
+                race.begin_fill()
+                race.forward(n)
+                race.right(90)
+                race.forward(n)
+                race.right(90)
+                race.forward(n)
+                race.right(90)
+                race.forward(n)
+                race.right(90)
+                race.forward(n + 1)
+                race.end_fill()
+            race.right(90)
+            race.forward(n + 1)
+            race.color('white')
+            race.right(90)
+            race.forward(self.width * (n + 1))
+        turtle.mainloop()
+
