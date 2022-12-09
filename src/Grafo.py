@@ -192,7 +192,6 @@ class Grafo:
         x, y = self.procura_DFS_Recursiva(start, end, [], visited)
         return x, y, visited
 
-
     # Custo Uniforme, ou algoritmo de dijkstra.
     def custoUniforme(self):
         start = self.inicialPos
@@ -294,7 +293,7 @@ class Grafo:
             if not parents.keys().__contains__(s[i]) or parents[s[i]]:
                 parents[s[i]] = s[i - 1]
 
-    def rebuild_path(self, start, caminho, n):
+    def rebuild_path(self, start, caminho, n, visited):
         parents = {start: start}
         reconst_path = []
         procura = True
@@ -308,7 +307,7 @@ class Grafo:
                 n = parents[n]
         reconst_path.append(start)
         reconst_path.reverse()
-        return reconst_path, self.calcula_custo(reconst_path)
+        return reconst_path, self.calcula_custo(reconst_path), visited
 
     def greedy_aux(self, s, caminho, open_list, visited, v):
         if len(s) > 0:
@@ -324,18 +323,18 @@ class Grafo:
     def greedy(self):
         start = self.inicialPos
         open_list = [(start, 1)]
-        closed_list = []
+        visited = []
         caminho = {}
         while len(open_list) > 0:
             n, v = min(open_list, key=lambda elem: self.m_nodes[elem[0]].heuristica)
             if n in self.finalPos:
-                return self.rebuild_path(start, caminho, n)
+                return self.rebuild_path(start, caminho, n, visited)
             s1, s2, s3 = self.heuristica(n, v)
-            self.greedy_aux(s1, caminho, open_list, closed_list, v - 1)
-            self.greedy_aux(s2, caminho, open_list, closed_list, v)
-            self.greedy_aux(s3, caminho, open_list, closed_list, v + 1)
+            self.greedy_aux(s1, caminho, open_list, visited, v - 1)
+            self.greedy_aux(s2, caminho, open_list, visited, v)
+            self.greedy_aux(s3, caminho, open_list, visited, v + 1)
             open_list.remove((n, v))
-            closed_list.append(n)
+            visited.append(n)
         return None
 
     def a_star_aux(self, s, caminho, open_list, visited, custo, v):
@@ -358,7 +357,7 @@ class Grafo:
         while len(open_list) > 0:
             n, v, c = min(open_list, key=lambda elem: self.m_nodes[elem[0]].heuristica + elem[2])
             if n in self.finalPos:
-                return self.rebuild_path(start, caminho, n)
+                return self.rebuild_path(start, caminho, n, visited)
             s1, s2, s3 = self.heuristica(n, v)
             self.a_star_aux(s1, caminho, open_list, visited, c, v - 1)
             self.a_star_aux(s2, caminho, open_list, visited, c, v)
@@ -368,37 +367,61 @@ class Grafo:
         return None
 
     # Desenha o grafo de uma forma muito básica. Para já não está apto para desenhar caminhos
-    def draw_turtle(self):
+    def draw_turtle(self, path, title):
+        turtle.title(title)
         race = turtle.Turtle()
+        race.color("white")
+        race.right(180)
+        race.forward(self.width * 10 / 2)
+        race.right(90)
+        race.forward(self.heigth * 10 / 2)
+        race.left(270)
         n = 10
         for y in range(self.heigth):
             if y != 0:
-                race.left(90)
-                race.left(90)
-            for x in range(self.width):
-                if self.m_nodes[(x, y)].elem[0] == 'X':
+                race.left(180)
+            x = 0
+            while x < self.width:
+                if (x, y) in path:
                     race.color("gray")
-                elif self.m_nodes[(x, y)].elem[0] == '-':
-                    race.color("white")
+                elif self.m_nodes[(x, y)].elem[0] == 'X':
+                    race.color("brown")
                 elif self.m_nodes[(x, y)].elem[0] == 'P':
                     race.color("black")
                 elif self.m_nodes[(x, y)].elem[0] == 'F':
                     race.color("red")
-                race.begin_fill()
-                race.forward(n)
-                race.right(90)
-                race.forward(n)
-                race.right(90)
-                race.forward(n)
-                race.right(90)
-                race.forward(n)
-                race.right(90)
-                race.forward(n + 1)
-                race.end_fill()
+                elif self.m_nodes[(x, y)].elem[0] == 'X':
+                    race.color("brown")
+                if self.m_nodes[(x, y)].elem[0] == ' ' and (x, y) not in path:
+                    race.color("white")
+                    race.forward(n + 1)
+                    x+=1
+                else:
+                    if (x, y) in path:
+                        b = True
+                        c = 'k'
+                    else:
+                        b = False
+                        c = self.m_nodes[(x, y)].elem[0]
+                    xi = x
+                    while x < self.width and ((b and (x ,y) in path) or (self.m_nodes[(x, y)].elem[0] == c and (x ,y) not in path)):
+                        x += 1
+                    m = (n+1) * (x - xi) - 1
+                    race.begin_fill()
+                    race.forward(m)
+                    race.right(90)
+                    race.forward(n)
+                    race.right(90)
+                    race.forward(m)
+                    race.right(90)
+                    race.forward(n)
+                    race.right(90)
+                    race.forward(m+1)
+                    race.end_fill()
             race.right(90)
             race.forward(n + 1)
             race.color('white')
             race.right(90)
             race.forward(self.width * (n + 1))
+        race.forward(n)
         turtle.mainloop()
-
