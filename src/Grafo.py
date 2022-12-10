@@ -169,19 +169,20 @@ class Grafo:
             path.reverse()
         return path, self.calcula_custo(path), visited
 
-    def procura_DFS_Recursiva(self, start, end, path, visited):
-        path.append(start)
+    def procura_DFS_Recursiva(self, start, end, visited):
         visited.add(start)
         if start in end:
-            # calcular o custo do caminho funçao calcula custo.
-            custoT = self.calcula_custo(path)
+            path = [start]
+            custoT = self.m_nodes[start].elem[1]
             return path, custoT
         for adjacente in self.m_graph[start]:
             if adjacente not in visited:
-                resultado = self.procura_DFS_Recursiva(adjacente, end, path, visited)
+                resultado = self.procura_DFS_Recursiva(adjacente, end, visited)
                 if resultado is not None:
-                    return resultado
-        path.pop()  # se nao encontra remover o que está no caminho......
+                    if start == self.inicialPos:
+                        return [start] + resultado[0], self.calcula_custo([start] + resultado[0])
+                    else:
+                        return [start] + resultado[0], 0
         return None
 
     # Procura em profundidade
@@ -189,8 +190,91 @@ class Grafo:
         start = self.inicialPos
         end = self.finalPos
         visited = set()
-        x, y = self.procura_DFS_Recursiva(start, end, [], visited)
+        x, y = self.procura_DFS_Recursiva(start, end, visited)
         return x, y, visited
+
+    def procura_iterativa_Recursiva(self, start, end, visited, iteracoes):
+        visited.add(start)
+        if start in end:
+            path = [start]
+            custoT = self.m_nodes[start].elem[1]
+            return path, custoT
+        if iteracoes == 0:
+            return None
+        for adjacente in self.m_graph[start]:
+            if adjacente not in visited:
+                resultado = self.procura_iterativa_Recursiva(adjacente, end, visited, iteracoes - 1)
+                if resultado is not None:
+                    if start == self.inicialPos:
+                        return [start] + resultado[0], self.calcula_custo([start] + resultado[0])
+                    else:
+                        return [start] + resultado[0], 0
+        return None
+
+    # Procura em profundidade
+    def procura_iterativa(self, iteracoes):
+        start = self.inicialPos
+        end = self.finalPos
+        visited = set()
+        c = self.procura_iterativa_Recursiva(start, end, visited, iteracoes)
+        if c is None:
+            return c
+        return c[0], c[1], visited
+
+    def bidirectional(self):
+        start = self.inicialPos
+        end = self.finalPos
+        visited1 = []
+        visited2 = []
+        fila1 = []
+        fila2 = []
+        fila1.append(start)
+        for c in end:
+            fila2.append(c)
+        path_found = False
+        parent1 = dict()
+        parent2 = dict()
+        finalpos = (0, 0)
+        while len(fila1) > 0 and len(fila2) > 0 and not path_found:
+            c1 = fila1.pop()
+            c2 = fila2.pop()
+            if c2 in visited1:
+                finalpos = c2
+                path_found = True
+            elif c1 in visited2:
+                finalpos = c1
+                path_found = True
+            else:
+                for adjacente in self.m_graph[c1]:
+                    if adjacente not in visited1 and adjacente not in visited2:
+                        fila1.append(adjacente)
+                        parent1[adjacente] = c1
+                        visited1.append(adjacente)
+                for adjacente in self.m_graph[c2]:
+                    if adjacente not in visited1 and adjacente not in visited2:
+                        fila2.append(adjacente)
+                        parent2[adjacente] = c2
+                        visited2.append(adjacente)
+        path = []
+        if path_found:
+            path.append(finalpos)
+            intermedio = finalpos
+            end = finalpos
+            while end not in self.finalPos and parent2[end] is not None:
+                path.append(parent2[end])
+                end = parent2[end]
+            path2 = []
+            start = intermedio
+            for c in parent1.keys():
+                if parent1[c] == start:
+                    start = c
+            while start != self.inicialPos:
+                path2.append(start)
+                start = parent1[start]
+            path2.append(start)
+            path2.reverse()
+            path = path2 + path
+        return path, self.calcula_custo(path), visited1 + visited2
 
     # Custo Uniforme, ou algoritmo de dijkstra.
     def custoUniforme(self):
@@ -366,6 +450,84 @@ class Grafo:
             visited.append(n)
         return None
 
+    def subs(self, ca, c, posicoes):
+        posicoes[ca] = ' '
+        posicoes[c] = '-'
+
+    def adjacente_bool(self, c1, c2):
+        return self.calculaDist(c1, c2) == 1
+
+    def game(self, paths):
+        vencedor = []
+        i = 0
+        jog = 0
+        d = dict()
+        posicoes = dict()
+        for p in paths:
+            d[jog] = p
+            jog += 1
+        for coords in self.m_nodes.keys():
+            posicoes[coords] = ' '
+        while len(vencedor) < len(paths):
+            i += 1
+            for j in d.keys():
+                path = d[j]
+                if i < len(path) and j not in vencedor:
+                    cantigo = path[i - 1]
+                    c = path[i]
+                    k = i - 2
+                    while cantigo == c:
+                        cantigo = path[k]
+                        k -= 1
+                    e = posicoes[c]
+                    if c in self.finalPos:
+                        print("chegou " + str(j))
+                        vencedor.append(j)
+                        posicoes[cantigo] = ' '
+                    elif e[0] == '-':
+                        b = True
+                        adjacentes = self.m_graph[c]
+                        for coords in adjacentes:
+                            if path[i + 1] in self.m_graph[coords]:
+                                e = self.m_nodes[coords].elem
+                                if coords not in self.finalPos and e[0] != '-':
+                                    self.subs(cantigo, c, posicoes)
+                                    b = False
+                                    break
+                                elif coords in self.finalPos:
+                                    b = False
+                                    print("chegou " + str(j))
+                                    vencedor.append(j)
+                                    posicoes[cantigo] = ' '
+                                    break
+                        if b:
+                            k = len(path)
+                            path.append(path[k - 1])
+                            k -= 1
+                            while k > i:
+                                path[k + 1] = path[k]
+                                k -= 1
+                            path[i] = path[i - 1]
+                    else:
+                        self.subs(cantigo, c, posicoes)
+        for p in posicoes.keys():
+            if posicoes[p] != ' ':
+                print(p)
+                print(posicoes[p])
+        pos = dict()
+        posicao = 1
+        vencedores = []
+        for v in vencedor:
+            h = posicao + self.calcula_custo(d[v])
+            while pos.__contains__(h):
+                h += 1
+            pos[h] = v
+            posicao += 1
+            vencedores.append(h)
+        vencedores.sort()
+        winner = pos[vencedores[0]]
+        return winner
+
     # Desenha o grafo de uma forma muito básica. Para já não está apto para desenhar caminhos
     def draw_turtle(self, path, title):
         turtle.title(title)
@@ -395,7 +557,7 @@ class Grafo:
                 if self.m_nodes[(x, y)].elem[0] == ' ' and (x, y) not in path:
                     race.color("white")
                     race.forward(n + 1)
-                    x+=1
+                    x += 1
                 else:
                     if (x, y) in path:
                         b = True
@@ -404,9 +566,10 @@ class Grafo:
                         b = False
                         c = self.m_nodes[(x, y)].elem[0]
                     xi = x
-                    while x < self.width and ((b and (x ,y) in path) or (self.m_nodes[(x, y)].elem[0] == c and (x ,y) not in path)):
+                    while x < self.width and (
+                            (b and (x, y) in path) or (self.m_nodes[(x, y)].elem[0] == c and (x, y) not in path)):
                         x += 1
-                    m = (n+1) * (x - xi) - 1
+                    m = (n + 1) * (x - xi) - 1
                     race.begin_fill()
                     race.forward(m)
                     race.right(90)
@@ -416,7 +579,7 @@ class Grafo:
                     race.right(90)
                     race.forward(n)
                     race.right(90)
-                    race.forward(m+1)
+                    race.forward(m + 1)
                     race.end_fill()
             race.right(90)
             race.forward(n + 1)
