@@ -381,6 +381,8 @@ class Grafo:
         parents = {start: start}
         reconst_path = []
         procura = True
+        for l in caminho.values():
+            visited.extend(l[0])
         while procura:
             if not parents.__contains__(n):
                 self.add_parent(caminho[n][0], parents)

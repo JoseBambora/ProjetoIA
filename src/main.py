@@ -12,6 +12,16 @@ dfs = grafo.procura_DFS()
 bi = grafo.bidirectional()
 ite = grafo.procura_iterativa(2000)
 
+# print(grafo.toMatrizPath(menor[2],0,'+'))
+# print(grafo.toMatrizPath(menor[0],menor[1],'+'))
+# print(grafo.toMatrizPath(bi[0],bi[1],'.'))
+# print(grafo.toMatrizPath(bi[2],bi[1],'+'))
+# print(grafo.toMatrizPath(ite[0],ite[1],'.'))
+# print(grafo.toMatrizPath(greedy[0],greedy[1],'+'))
+# print(grafo.toMatrizPath(a_star[0],a_star[1],'+'))
+# print(grafo.toMatrizPath(ite[2],ite[1],'+'))
+#print(grafo.toMatrizPath(greedy[2],0,'+'))
+# print(grafo.toMatrizPath(a_star[2],0,'+'))
 print("Vencedor: " + str(grafo.game([greedy[0],a_star[0],menor[0],bfs[0],dfs[0],bi[0],ite[0]])))
 
 # print(grafo.toMatrizPath(ite[0],ite[1],'.'))
@@ -22,6 +32,8 @@ print("Vencedor: " + str(grafo.game([greedy[0],a_star[0],menor[0],bfs[0],dfs[0],
 # grafo.draw_turtle(menor[0], "Procura Uniforme")
 # grafo.draw_turtle(bfs[0],   "Procura Largura")
 # grafo.draw_turtle(dfs[0],   "Procura Profundidade")
+# grafo.draw_turtle(bi[0],    "Procura Bidirecional")
+grafo.draw_turtle(ite[0],   "Procura Iterativa")
 
 
 # print(grafo.toMatrizPath(greedy[0],greedy[1],'.'))
