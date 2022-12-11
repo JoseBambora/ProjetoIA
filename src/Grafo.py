@@ -483,7 +483,7 @@ class Grafo:
                         k -= 1
                     e = posicoes[c]
                     if c in self.finalPos:
-                        print("chegou " + str(j))
+                        print("Chegou ao fim o jogador " + str(j))
                         vencedor.append(j)
                         posicoes[cantigo] = ' '
                     elif e[0] == '-':
@@ -498,7 +498,7 @@ class Grafo:
                                     break
                                 elif coords in self.finalPos:
                                     b = False
-                                    print("chegou " + str(j))
+                                    print("Chegou ao fim o jogador " + str(j))
                                     vencedor.append(j)
                                     posicoes[cantigo] = ' '
                                     break
@@ -512,10 +512,6 @@ class Grafo:
                             path[i] = path[i - 1]
                     else:
                         self.subs(cantigo, c, posicoes)
-        for p in posicoes.keys():
-            if posicoes[p] != ' ':
-                print(p)
-                print(posicoes[p])
         pos = dict()
         posicao = 1
         vencedores = []

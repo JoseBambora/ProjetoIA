@@ -1,56 +1,73 @@
 from Grafo import Grafo
 import threading
 
+def getAlgoritmo():
+    b = True
+    p = []
+    alg = ""
+    while(b):
+        b = False
+        print("Qual o algoritmo?")
+        print("1 - Largura")
+        print("2 - Profundidade")
+        print("3 - Iterativo")
+        print("4 - Bidirecional")
+        print("5 - Uniforme")
+        print("6 - Gulosa")
+        print("7 - A Estrela")
+        alg = int(input())
+        if alg == 1:
+            alg = "Largura"
+            p = grafo.procura_BFS()[0]
+        elif alg == 2:
+            alg = "Profundidade"
+            p = grafo.procura_DFS()[0]
+        elif alg == 3:
+            alg = "Iterativo"
+            print("Quantas iterações?")
+            ite = input()
+            p = grafo.procura_iterativa(ite)[0]
+        elif alg == 4:
+            alg = "Bidirecional"
+            p = grafo.bidirectional()[0]
+        elif alg == 5:
+            alg = "Uniforme"
+            p = grafo.custoUniforme()[0]
+        elif alg == 6:
+            alg = "Gulosa"
+            p = grafo.greedy()[0]
+        elif alg == 7:
+            alg = "A Estrela"
+            p = grafo.a_star()[0]
+        else:
+            print("Opção Inválida")
+            b = True
+    return p, alg
+
 grafo = Grafo()
 grafo.add_info("../nossapista")
 
-greedy = grafo.greedy()
-a_star = grafo.a_star()
-menor = grafo.custoUniforme()
-bfs = grafo.procura_BFS()
-dfs = grafo.procura_DFS()
-bi = grafo.bidirectional()
-ite = grafo.procura_iterativa(2000)
-
-# print(grafo.toMatrizPath(menor[2],0,'+'))
-# print(grafo.toMatrizPath(menor[0],menor[1],'+'))
-# print(grafo.toMatrizPath(bi[0],bi[1],'.'))
-# print(grafo.toMatrizPath(bi[2],bi[1],'+'))
-# print(grafo.toMatrizPath(ite[0],ite[1],'.'))
-# print(grafo.toMatrizPath(greedy[0],greedy[1],'+'))
-# print(grafo.toMatrizPath(a_star[0],a_star[1],'+'))
-# print(grafo.toMatrizPath(ite[2],ite[1],'+'))
-#print(grafo.toMatrizPath(greedy[2],0,'+'))
-# print(grafo.toMatrizPath(a_star[2],0,'+'))
-print("Vencedor: " + str(grafo.game([greedy[0],a_star[0],menor[0],bfs[0],dfs[0],bi[0],ite[0]])))
-
-# print(grafo.toMatrizPath(ite[0],ite[1],'.'))
-# print(grafo.toMatrizPath(bi[0],bi[1],'.'))
-# print(grafo.toMatrizPath(dfs[0],dfs[1],'.'))
-# grafo.draw_turtle(greedy[0],"Procura Gulosa")
-# grafo.draw_turtle(a_star[0],"Procura A Estela")
-# grafo.draw_turtle(menor[0], "Procura Uniforme")
-# grafo.draw_turtle(bfs[0],   "Procura Largura")
-# grafo.draw_turtle(dfs[0],   "Procura Profundidade")
-# grafo.draw_turtle(bi[0],    "Procura Bidirecional")
-grafo.draw_turtle(ite[0],   "Procura Iterativa")
-
-
-# print(grafo.toMatrizPath(greedy[0],greedy[1],'.'))
-# print(grafo.toMatriz())
-# path1 = grafo.procura_BFS()
-# path2 = grafo.procura_DFS()
-# print(grafo.toMatrizPath(path1[0],path1[1],'.'))
-# print(grafo.toMatrizPath(path1[2],0,'+'))
-# print(grafo.toMatrizPath(path2[0],path2[1],'.'))
-# print(grafo.toMatrizPath(path2[2],0,'+'))
-
-
-# print(grafo.toMatrizPath(greedy[0],greedy[1],'.'))
-# print(grafo.toMatriz())
-# path1 = grafo.procura_BFS()
-# path2 = grafo.procura_DFS()
-# print(grafo.toMatrizPath(path1[0],path1[1],'.'))
-# print(grafo.toMatrizPath(path1[2],0,'+'))
-# print(grafo.toMatrizPath(path2[0],path2[1],'.'))
-# print(grafo.toMatrizPath(path2[2],0,'+'))
+print("Bem vindo ao Simulador RACE-TRACK!!")
+print("Escolha uma das seguintes opções:")
+print("1 - Multijogador")
+print("2 - Jogar sozinho")
+n = int(input())
+if n == 2:
+    p, alg = getAlgoritmo()
+    grafo.draw_turtle(p,"Solução algoritmo " + alg)
+else:
+    print("Quando jogadores (1-7)?")
+    jog = int(input())
+    l = []
+    for i in range(jog):
+        b = True
+        while b:
+            print("Jogador " + str(i))
+            p, _ = getAlgoritmo()
+            if p in l:
+                print("Algoritmo já escolhido")
+            else:
+                l.append(p)
+                b = False
+    winner = grafo.game(l)
+    print("Ganhou jogador: " + str(winner))
