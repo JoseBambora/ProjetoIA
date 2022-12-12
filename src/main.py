@@ -8,6 +8,7 @@ def getAlgoritmo():
     b = True
     p = []
     alg = ""
+    delta = datetime.now()
     while (b):
         b = False
         print("Qual o algoritmo?")
@@ -29,7 +30,8 @@ def getAlgoritmo():
         elif alg == 3:
             alg = "Iterativo"
             print("Quantas iterações?")
-            ite = input()
+            ite = int(input())
+            init = datetime.now()
             p = grafo.procura_iterativa(ite)
         elif alg == 4:
             alg = "Bidirecional"
@@ -48,7 +50,7 @@ def getAlgoritmo():
             b = True
         fim = datetime.now()
         delta = fim - init
-        print("Tempo: " + str(delta.total_seconds()))
+    print("Tempo: " + str(delta.total_seconds()))
     return p, alg
 
 
@@ -79,15 +81,17 @@ else:
         print("Número de jogadores inválido")
         jog = int(input())
     l = []
+    alg = []
     for i in range(jog):
         b = True
         while b:
             print("Jogador " + str(i))
             p, _ = getAlgoritmo()
-            if p in l:
+            if _ in alg:
                 print("Algoritmo já escolhido")
             else:
-                l.append(p)
+                alg.append(_)
+                l.append(p[0])
                 b = False
     winner = grafo.game(l)
     print("Ganhou jogador: " + str(winner))
