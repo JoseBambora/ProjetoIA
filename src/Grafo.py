@@ -352,15 +352,17 @@ class Grafo:
         l = list()
         if velocity > 1:
             for c in la:
-                if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
+                if c in self.finalPos:
+                    l.append([pos,c])
+                    break
+                else:
                     aux = self.heuristica_pos(c, velocity - 1)
                     for path in aux:
                         if self.calculaDist(path[-1], pos) == velocity:
                             l.append([pos] + path)
         else:
             for c in la:
-                if self.m_nodes[c].heuristica < self.m_nodes[pos].heuristica:
-                    l.append([pos, c])
+                l.append([pos, c])
         return l
 
     def heuristica(self, pos, velocidade):
